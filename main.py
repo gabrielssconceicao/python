@@ -1,75 +1,66 @@
 import os
-from pprint import pprint
-# ANSI escape codes for colors
-COLOR_BLUE = "\033[94m"
-COLOR_RESET = "\033[0m"
-
-def list_files2(directory):
-    for item in os.listdir(directory):
-        full_path = os.path.join(directory, item)
-        if os.path.isfile(full_path):
-            print(full_path)
-        elif os.path.isdir(full_path):
-            list_files(full_path)
-
-def list_files(directory, accumulator=None, level=0):
-    if accumulator is None:
-        accumulator = []
-
-    for item_name in os.listdir(directory):
-        item_path = os.path.join(directory, item_name)
-        if os.path.isfile(item_path):
-            accumulator.append((level, item_name))
-        elif os.path.isdir(item_path):
-            accumulator.append((level, COLOR_BLUE + item_name + COLOR_RESET))
-            list_files(item_path, accumulator, level + 1)  # Recursive call for subdirectory
-
-    return accumulator
 
 
-
-def mostrar():
-    #arquivos = list_files("C:\Development\IDEs_Projects\VSCode")
-    #directory = input("Enter the directory path: ")
-    directory = "C:\Development\IDEs_Projects\VSCode"
-    if os.path.exists(directory):
-        files = list_files2(directory)
-        if files:
-            print("Files found:")
-            for level, file in files:
-                print("    " * level + file)
-        else:
-            print("No files found in this directory and subdirectories.")
-    else:
-        print("The specified directory does not exist.")
-
-
-def menu():
-    print("""Escolha uma opção:
-    [1] Listar Diretórios
-    [2] Sair
-    """)
+def list_files_and_dirs_tail_recursive(path, level=1, content=None,
+                                       arquivos=None):
+    if content is None:
+        content = os.listdir(path)
+    if len(content) == 0:
+        return arquivos
+    if arquivos is None:
+        arquivos = []
     
+    # Pegar o primeiro item do array content
+    item = content.pop(0)
+    path_item = os.path.join(path, item)
+    
+    # Verifica se é diretorio
+    if os.path.isdir(path_item):
+        new_files = os.listdir(path_item)
+        arquivos.append({"file": item + "/", "level": level})
+        result = list_files_and_dirs_tail_recursive(path_item, level + 1,
+                                                    new_files)
+        if result:
+            arquivos.extend(result)
+    else:
+        arquivos.append({"file": item, "level": level})
+    return list_files_and_dirs_tail_recursive(path, level, content, arquivos)
+
+
+def verify_directory_path():
+    directory_path = ""
+    while not os.path.isdir(directory_path):
+        directory_path = input("Digite um diretório: ")
+    
+    return directory_path
+
+
+def list_files(directory_path):
+    files = list_files_and_dirs_tail_recursive(directory_path)
+    print(f"Arquivos de {directory_path}")
+    for file in files:
+        print("\t" * file["level"] + file["file"])
+
+
+def continue_prompt():
+  
     while True:
-        try:
-            opcao = int(input("Sua opção: "))
-            
-            if opcao not in [1,2]:
-                raise ValueError("Opção inválida")
-            return opcao
-        except ValueError as ve:
-            print("Digite um número")
-       
+        again = input("Quer ir de novo? [S/N]").strip().lower()
+        if again == "s":
+            return "s"
+        elif again == "n":
+            return "n"
+        else:
+            print("Opção inválida")
+
 
 def main():
     while True:
-        opcao = menu()
-        
-        if opcao == 1:
-            mostrar()
-        elif opcao == 2:
+        directory_path = verify_directory_path()
+        list_files(directory_path)
+        again = continue_prompt()
+        if again != "s":
             break
 
 
-if __name__ == "__main__":
-    main()
+main()
