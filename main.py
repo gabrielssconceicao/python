@@ -45,7 +45,7 @@ def list_files(directory_path):
 def continue_prompt():
   
     while True:
-        again = input("Quer ir de novo? [S/N]").strip().lower()
+        again = input("Quer ir de novo? [S/N]: ").strip().lower()
         if again == "s":
             return "s"
         elif again == "n":
